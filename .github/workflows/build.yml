@@ -1,0 +1,70 @@
+name: Build, Version, and Publish Mod
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'         # Triggers for version tags like v1.0.0, v1.1.0
+      - 'test-*'         # Triggers for test tags like test-1.0.0, test-1.1.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Set up JDK (Java)
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'adoptopenjdk'
+
+      # Set up Gradle
+      - name: Set up Gradle
+        uses: gradle/wrapper-validation-action@v1
+
+      # Get the version from the tag and pass it to Gradle
+      - name: Get version from tag
+        id: versioning
+        run: echo "::set-output name=version::${GITHUB_REF#refs/tags/}"
+
+      # Set the version in Gradle and build the mod
+      - name: Build mod
+        run: ./gradlew build -Pversion=${{ steps.versioning.outputs.version }}
+
+      # Generate changelog from commits
+      - name: Generate changelog
+        id: changelog
+        run: |
+          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0)..HEAD > CHANGELOG.md
+          echo "Changelog generated."
+
+      # Check if it's a test build tag and skip publishing if true
+      - name: Check if test build
+        id: is_test_build
+        run: |
+          echo "Is test build: ${{ startsWith(github.ref, 'refs/tags/test-') }}"
+          echo "::set-output name=is_test::${{ startsWith(github.ref, 'refs/tags/test-') }}"
+
+      # Publish to CurseForge (Only for non-test builds)
+      - name: Publish to CurseForge
+        if: ${{ !steps.is_test_build.outputs.is_test == 'true' }} # Don't publish for test builds
+        run: |
+          mc-publish curseforge \
+            --modfile build/libs/*.jar \
+            --game-type minecraft \
+            --version ${GITHUB_REF#refs/tags/} \
+            --changelog-file CHANGELOG.md \
+            --access-token ${{ secrets.CURSEFORGE_TOKEN }}
+
+      # Publish to Modrinth (Only for non-test builds)
+      - name: Publish to Modrinth
+        if: ${{ !steps.is_test_build.outputs.is_test == 'true' }} # Don't publish for test builds
+        run: |
+          mc-publish modrinth \
+            --modfile build/libs/*.jar \
+            --game-type minecraft \
+            --version ${GITHUB_REF#refs/tags/} \
+            --changelog-file CHANGELOG.md \
+            --access-token ${{ secrets.MODRINTH_TOKEN }}

@@ -1,0 +1,30 @@
+modLoader = "javafml"
+loaderVersion = "[47,)"
+issueTrackerURL = "https://github.com/laserman120/Bobber-Detector-Minecraft/issues"
+license = "MIT"
+
+[[mods]]
+modId = "bobberdetector"
+version = "1.0.0"
+displayName = "Bobber Detector"
+updateJSONURL = "https://raw.githubusercontent.com/laserman120/Bobber-Detector-Minecraft/refs/heads/master/update.json"
+authors = "GLaD0S, Bennyboy1695"
+description = '''
+Automatic fishing with create.
+'''
+#logoFile = ""
+
+[[dependencies.bobberdetector]]
+modId = "forge"
+mandatory = true
+versionRange = "[47,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.bobberdetector]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.20.1,)"
+ordering = "NONE"
+side = "BOTH"
+

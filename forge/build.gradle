@@ -1,0 +1,97 @@
+plugins {
+    id 'com.github.johnrengelman.shadow'
+}
+
+loom {
+    forge {
+        mixinConfig "bobberdetector.mixins.json"
+    }
+
+    runs {
+        client {
+            vmArg "-XX:+AllowEnhancedClassRedefinition"
+            programArgs "--username=Dev"
+        }
+        server {
+            vmArg "-XX:+AllowEnhancedClassRedefinition"
+        }
+        data {
+            data()
+            name "Data Generation"
+            programArgs "--all", "--mod", "bobberdetector"
+            programArgs "--output", file("src/generated/resources").absolutePath
+            programArgs "--existing", project(":common").file("src/main/resources").absolutePath
+            programArgs "--existing-mod", "create"
+        }
+    }
+}
+
+architectury {
+    platformSetupLoomIde()
+    forge()
+}
+
+configurations {
+    common {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentForge.extendsFrom common
+
+    // Files in this configuration will be bundled into your mod using the Shadow plugin.
+    // Don't use the `shadow` configuration from the plugin itself as it's meant for excluding files.
+    shadowBundle {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+}
+
+dependencies {
+    forge "net.minecraftforge:forge:${forge_version}"
+    // Create and its dependencies
+    modImplementation("com.simibubi.create:create-${minecraft_version}:${create_forge_version}:slim") { transitive = false }
+    modImplementation("com.tterrag.registrate:Registrate:${registrate_forge_version}") {transitive = false}
+    modImplementation("dev.engine-room.flywheel:flywheel-forge-${minecraft_version}:${flywheel_forge_version}")
+    modImplementation("net.createmod.ponder:Ponder-Forge-${minecraft_version}:${ponder_version}") { transitive = false}
+
+    modLocalRuntime("curse.maven:jade-324717:${jade_forge_curse_id}")
+    modLocalRuntime("mezz.jei:jei-${minecraft_version}-forge:${jei_forge_version}")
+    modLocalRuntime("curse.maven:aquaculture-60028:6296111")
+
+    compileOnly("io.github.llamalad7:mixinextras-common:${mixin_extras_version}")
+    annotationProcessor(implementation(include("io.github.llamalad7:mixinextras-forge:${mixin_extras_version}")))
+
+    common(project(path: ':common', configuration: 'namedElements')) { transitive false }
+    shadowBundle project(path: ':common', configuration: 'transformProductionForge')
+}
+
+processResources {
+    inputs.property 'version', rootProject.version
+
+    filesMatching('META-INF/mods.toml') {
+        expand version: rootProject.version
+    }
+}
+
+shadowJar {
+    configurations = [project.configurations.shadowBundle]
+    archiveClassifier = 'dev-shadow'
+}
+
+remapJar {
+    inputFile.set(shadowJar.archiveFile)
+    dependsOn shadowJar
+    archiveClassifier.set(null)
+}
+
+jar {
+    archiveClassifier.set("dev")
+}
+
+sourceSets {
+    main {
+        resources.srcDir 'src/generated/resources'
+    }
+}

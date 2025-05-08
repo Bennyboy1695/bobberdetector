@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "net.glad0s.bobberdetector.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "minVersion": "0.8",
+  "client": [
+  ],
+  "mixins": [
+    "MixinFishingHook"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

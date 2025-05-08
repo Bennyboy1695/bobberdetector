@@ -1,0 +1,177 @@
+plugins {
+    id 'dev.architectury.loom' version '1.9-SNAPSHOT' apply false
+    id 'architectury-plugin' version '3.4-SNAPSHOT'
+    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
+}
+
+architectury {
+    minecraft = project.minecraft_version
+}
+
+allprojects {
+    apply plugin: "java"
+    apply plugin: "architectury-plugin"
+    apply plugin: "maven-publish"
+
+    version = project.hasProperty('version') ? project.property('version') : rootProject.mod_version
+    group = rootProject.maven_group
+    archivesBaseName = rootProject.archivesBaseName
+
+    repositories {
+        maven {
+            name = 'ParchmentMC'
+            url = 'https://maven.parchmentmc.org'
+        }
+        maven {
+            name = 'createmod maven'
+            url = 'https://maven.createmod.net/'
+        }
+        maven {
+            name = 'tterrag maven'
+            url = 'https://maven.tterrag.com/'
+        }
+        maven {
+            // location of the maven that hosts JEI files before January 2023
+            name = "Progwml6's maven"
+            url = "https://dvs1.progwml6.com/files/maven/"
+        }
+        maven {
+            // location of the maven that hosts JEI files since January 2023
+            name = "Jared's maven"
+            url = "https://maven.blamejared.com/"
+        }
+        maven {
+            // location of a maven mirror for JEI files, as a fallback
+            name = "ModMaven"
+            url = "https://modmaven.dev"
+        }
+        maven {
+            url = "https://cursemaven.com"
+        }
+        mavenCentral()
+        maven {
+            url = "https://mvn.devos.one/snapshots/"
+        }
+        maven { url = "https://mvn.devos.one/releases/" }
+        maven {
+            url = "https://cursemaven.com"
+        }
+        maven {
+            url = "https://jitpack.io"
+        }
+        maven { // Reach Entity Attributes
+            url = "https://maven.jamieswhiteshirt.com/libs-release"
+            content { includeGroup("com.jamieswhiteshirt") }
+        }
+        maven {
+            //Forge Config Api Port, DiagonalBlocks
+            url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven/"
+        }
+        maven { // for Porting Lib: Mixin Extras, Fabric ASM
+            url = "https://jitpack.io/"
+            content { includeGroupAndSubgroups("com.github") }
+        }
+        exclusiveContent {
+            forRepository {
+                maven {
+                    name = "Modrinth"
+                    url = "https://api.modrinth.com/maven"
+                }
+            }
+            filter {
+                includeGroup "maven.modrinth"
+            }
+        }
+        flatDir {
+            dirs "lib"
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = "UTF-8"
+        options.release.set(17)
+    }
+
+    tasks.named('processResources', ProcessResources).configure {
+        duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+        // include packs
+        from(project(":common").file("src/main/resources")) {
+            include("resourcepacks/")
+        }
+
+        // set up properties for filling into metadata
+        var replaceProperties = [
+                version              : version.replace("forge.", "").replace("fabric.", ""),
+                minecraft_version    : minecraft_version,
+                fabric_api_version   : fabric_api_version,
+                fabric_loader_version: fabric_loader_version,
+                create_forge_range   : create_forge_range,
+                create_fabric_range  : create_fabric_range,
+                mod_license          : mod_license,
+                mod_authors          : mod_authors,
+                mod_name             : mod_name,
+                mod_description      : mod_description
+        ]
+
+        inputs.properties replaceProperties
+
+        filesMatching(["fabric.mod.json", "META-INF/mods.toml"]) {
+            expand replaceProperties + [project: project]
+        }
+    }
+
+    java {
+        withSourcesJar()
+    }
+}
+
+subprojects {
+    apply plugin: 'dev.architectury.loom'
+    apply plugin: 'architectury-plugin'
+    apply plugin: 'maven-publish'
+
+    loom {
+        silentMojangMappingsLicense()
+    }
+
+    dependencies {
+        minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
+        mappings loom.layered() {
+            officialMojangMappings()
+            parchment("org.parchmentmc.data:parchment-${rootProject.minecraft_version}:${rootProject.parchment_version}@zip")
+        }
+        compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
+    }
+
+    java {
+        // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+        // if it is present.
+        // If you remove this line, sources will not be generated.
+        withSourcesJar()
+
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        it.options.release = 17
+    }
+
+    // Configure Maven publishing.
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                artifactId = base.archivesName.get()
+                from components.java
+            }
+        }
+
+        // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+        repositories {
+            // Add repositories to publish to here.
+            // Notice: This block does NOT have the same function as the block in the top level.
+            // The repositories here will be used for publishing your artifact, not for
+            // retrieving dependencies.
+        }
+    }
+}

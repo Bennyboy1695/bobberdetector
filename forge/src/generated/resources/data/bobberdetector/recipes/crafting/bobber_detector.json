@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "item": "create:content_observer"
+    },
+    "A": {
+      "item": "create:andesite_alloy"
+    },
+    "F": {
+      "item": "minecraft:fishing_rod"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "AFA",
+    "R#R",
+    "ARA"
+  ],
+  "result": {
+    "item": "bobberdetector:bobber_detector"
+  },
+  "show_notification": true
+}
