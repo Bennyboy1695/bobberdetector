@@ -22,7 +22,7 @@ jobs:
 
       # Set up Gradle
       - name: Set up Gradle
-        uses: gradle/wrapper-validation-action@v1
+        uses: gradle/actions/wrapper-validation@v3
 
       # Get the version from the tag and pass it to Gradle
       - name: Get version from tag
