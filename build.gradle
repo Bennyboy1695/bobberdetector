@@ -175,3 +175,7 @@ subprojects {
         }
     }
 }
+
+wrapper {
+    gradleVersion = "8.11"
+}
