@@ -70,20 +70,20 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
 
       - name: Publish Forge
+        uses: Kira-NT/mc-publish@v3.3
         if: ${{ env.IS_TEST != 'true' && env.PUBLISH_FORGE == 'true' }}
-        uses: Kira-NT/mc-publish@v3
         with:
-          modrinth-id: GRznXwf3
-          modrinth-featured: true
-          curseforge-id: 897858
-          loaders: |
-          - forge
-          - neoforge
-          game-versions: |
-          - 1.20.1
-          version: ${{ env.VERSION }}
-          changelog: ${{ env.CHANGELOG }}
-          files: forge/build/libs/*.jar:forge
+            modrinth-id: GRznXwf3
+            modrinth-featured: true
+            curseforge-id: 897858
+            loaders: |
+              forge
+              neoforge
+            game-versions: |
+              1.20.1
+            version: ${{ env.VERSION }}
+            changelog: ${{ env.CHANGELOG }}
+            files: forge/build/libs/*.jar:forge
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
@@ -97,7 +97,9 @@ jobs:
           modrinth-featured: true
           curseforge-id: 897858
           loaders: |
-          - fabric
+            fabric
+          game-versions: |
+              1.20.1
           version: ${{ env.VERSION }}
           changelog: ${{ env.CHANGELOG }}
           files: fabric/build/libs/*.jar:fabric
