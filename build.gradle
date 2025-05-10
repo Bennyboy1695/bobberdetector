@@ -13,7 +13,7 @@ allprojects {
     apply plugin: "architectury-plugin"
     apply plugin: "maven-publish"
 
-    version = project.hasProperty('version') ? project.property('version') : rootProject.mod_version
+    version = project.hasProperty('version_property') ? project.property('version_property') : project.mod_version
     group = rootProject.maven_group
     archivesBaseName = rootProject.archivesBaseName
 
@@ -31,17 +31,14 @@ allprojects {
             url = 'https://maven.tterrag.com/'
         }
         maven {
-            // location of the maven that hosts JEI files before January 2023
             name = "Progwml6's maven"
             url = "https://dvs1.progwml6.com/files/maven/"
         }
         maven {
-            // location of the maven that hosts JEI files since January 2023
             name = "Jared's maven"
             url = "https://maven.blamejared.com/"
         }
         maven {
-            // location of a maven mirror for JEI files, as a fallback
             name = "ModMaven"
             url = "https://modmaven.dev"
         }
@@ -59,15 +56,14 @@ allprojects {
         maven {
             url = "https://jitpack.io"
         }
-        maven { // Reach Entity Attributes
+        maven {
             url = "https://maven.jamieswhiteshirt.com/libs-release"
             content { includeGroup("com.jamieswhiteshirt") }
         }
         maven {
-            //Forge Config Api Port, DiagonalBlocks
             url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven/"
         }
-        maven { // for Porting Lib: Mixin Extras, Fabric ASM
+        maven {
             url = "https://jitpack.io/"
             content { includeGroupAndSubgroups("com.github") }
         }
@@ -94,13 +90,11 @@ allprojects {
 
     tasks.named('processResources', ProcessResources).configure {
         duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
-        // include packs
         from(project(":common").file("src/main/resources")) {
             include("resourcepacks/")
         }
 
-        // set up properties for filling into metadata
-        var replaceProperties = [
+        def replaceProperties = [
                 version              : version.replace("forge.", "").replace("fabric.", ""),
                 minecraft_version    : minecraft_version,
                 fabric_api_version   : fabric_api_version,
@@ -144,11 +138,7 @@ subprojects {
     }
 
     java {
-        // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-        // if it is present.
-        // If you remove this line, sources will not be generated.
         withSourcesJar()
-
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -157,7 +147,14 @@ subprojects {
         it.options.release = 17
     }
 
-    // Configure Maven publishing.
+    tasks.named('remapJar').configure {
+        def loader = project.name
+        archiveBaseName.set("${archivesBaseName}-${loader}")
+        archiveVersion.set(version)
+        archiveClassifier.set(null)
+        archiveFileName.set("${archivesBaseName}-${loader}${minecraft_version}-${version}.jar")
+    }
+
     publishing {
         publications {
             mavenJava(MavenPublication) {
@@ -165,16 +162,12 @@ subprojects {
                 from components.java
             }
         }
-
-        // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
         repositories {
-            // Add repositories to publish to here.
-            // Notice: This block does NOT have the same function as the block in the top level.
-            // The repositories here will be used for publishing your artifact, not for
-            // retrieving dependencies.
+            // Add your publication repositories here
         }
     }
 }
+
 
 wrapper {
     gradleVersion = "8.11"

@@ -77,17 +77,13 @@ processResources {
 
 shadowJar {
     configurations = [project.configurations.shadowBundle]
-    archiveClassifier = 'dev-shadow'
+    archiveClassifier = 'dev'
 }
 
 remapJar {
     inputFile.set(shadowJar.archiveFile)
     dependsOn shadowJar
     archiveClassifier.set(null)
-}
-
-jar {
-    archiveClassifier.set("dev")
 }
 
 sourceSets {

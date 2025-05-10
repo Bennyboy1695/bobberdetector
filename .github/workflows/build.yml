@@ -27,11 +27,9 @@ jobs:
         run: chmod +x gradlew
 
       - name: Get version from tag
-        id: versioning
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Check if test build
-        id: testcheck
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/test-* ]]; then
             echo "IS_TEST=true" >> $GITHUB_ENV
@@ -39,55 +37,66 @@ jobs:
             echo "IS_TEST=false" >> $GITHUB_ENV
           fi
 
-      - name: Check enabled loaders
+      - name: Read Minecraft version from gradle.properties and determine loaders
         run: |
-          if [[ "${{ secrets.ENABLED_LOADERS }}" == *"forge"* ]]; then
-            echo "PUBLISH_FORGE=true" >> $GITHUB_ENV
-          else
-            echo "PUBLISH_FORGE=false" >> $GITHUB_ENV
-          fi
+          MC_VERSION=$(grep "^minecraft_version=" gradle.properties | cut -d'=' -f2)
+          echo "MC_VERSION=$MC_VERSION" >> $GITHUB_ENV
+
           if [[ "${{ secrets.ENABLED_LOADERS }}" == *"fabric"* ]]; then
             echo "PUBLISH_FABRIC=true" >> $GITHUB_ENV
           else
             echo "PUBLISH_FABRIC=false" >> $GITHUB_ENV
           fi
 
-      # Conditionally build Forge
+          if [[ "$MC_VERSION" == 1.21* || "$MC_VERSION" > 1.20 ]]; then
+            if [[ "${{ secrets.ENABLED_LOADERS }}" == *"neoforge"* ]]; then
+              echo "PUBLISH_NEOFORGE=true" >> $GITHUB_ENV
+            else
+              echo "PUBLISH_NEOFORGE=false" >> $GITHUB_ENV
+            fi
+            echo "PUBLISH_FORGE=false" >> $GITHUB_ENV
+          else
+            if [[ "${{ secrets.ENABLED_LOADERS }}" == *"forge"* ]]; then
+              echo "PUBLISH_FORGE=true" >> $GITHUB_ENV
+            else
+              echo "PUBLISH_FORGE=false" >> $GITHUB_ENV
+            fi
+            echo "PUBLISH_NEOFORGE=false" >> $GITHUB_ENV
+          fi
+
       - name: Build Forge
         if: ${{ env.PUBLISH_FORGE == 'true' }}
-        run: ./gradlew :forge:build -Pversion=${{ env.VERSION }}
+        run: ./gradlew :forge:build -Pversion_property=${{ env.VERSION }}
 
-      # Conditionally build Fabric
+      - name: Build NeoForge
+        if: ${{ env.PUBLISH_NEOFORGE == 'true' }}
+        run: ./gradlew :neoforge:build -Pversion_property=${{ env.VERSION }}
+
       - name: Build Fabric
         if: ${{ env.PUBLISH_FABRIC == 'true' }}
-        run: ./gradlew :fabric:build -Pversion=${{ env.VERSION }}
+        run: ./gradlew :fabric:build -Pversion_property=${{ env.VERSION }}
 
       - name: Generate changelog
-        id: changelog
         run: |
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
           git log --pretty=format:"- %s" $(git describe --tags --abbrev=0)..HEAD >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-      # Print built JAR files if test build
-      - name: List JARs
-        if: ${{ env.IS_TEST == 'true' }}
-        run: |
-          echo "Forge JARs:"
-          ls -lh forge/build/libs || true
-          echo "Fabric JARs:"
-          ls -lh fabric/build/libs || true
-
-      # Upload Forge JAR as artifact for test build
-      - name: Upload Forge JAR (Test)
+      - name: Upload Forge JARs (Test)
         if: ${{ env.IS_TEST == 'true' && env.PUBLISH_FORGE == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: forge-${{ env.VERSION }}
           path: forge/build/libs/*.jar
 
-      # Upload Fabric JAR as artifact for test build
-      - name: Upload Fabric JAR (Test)
+      - name: Upload NeoForge JARs (Test)
+        if: ${{ env.IS_TEST == 'true' && env.PUBLISH_NEOFORGE == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: neoforge-${{ env.VERSION }}
+          path: neoforge/build/libs/*.jar
+
+      - name: Upload Fabric JARs (Test)
         if: ${{ env.IS_TEST == 'true' && env.PUBLISH_FABRIC == 'true' }}
         uses: actions/upload-artifact@v4
         with:
@@ -95,20 +104,39 @@ jobs:
           path: fabric/build/libs/*.jar
 
       - name: Publish Forge
-        uses: Kira-NT/mc-publish@v3.3
         if: ${{ env.IS_TEST != 'true' && env.PUBLISH_FORGE == 'true' }}
+        uses: Kira-NT/mc-publish@v3.3
         with:
-            modrinth-id: GRznXwf3
-            modrinth-featured: true
-            curseforge-id: 897858
-            loaders: |
-              forge
-              neoforge
-            game-versions: |
-              1.20.1
-            version: ${{ env.VERSION }}
-            changelog: ${{ env.CHANGELOG }}
-            files: forge/build/libs/*.jar:forge
+          modrinth-id: ${{ secrets.MODRINTH_ID }}
+          modrinth-featured: true
+          curseforge-id: ${{ secrets.CURSEFORGE_ID }}
+          loaders: |
+            forge
+            neoforge
+          game-versions: |
+            ${{ env.MC_VERSION }}
+          version: ${{ env.VERSION }}
+          changelog: ${{ env.CHANGELOG }}
+          files: forge/build/libs/*[!-dev][!-sources].jar:forge
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish NeoForge
+        if: ${{ env.IS_TEST != 'true' && env.PUBLISH_NEOFORGE == 'true' }}
+        uses: Kira-NT/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ secrets.MODRINTH_ID }}
+          modrinth-featured: true
+          curseforge-id: ${{ secrets.CURSEFORGE_ID }}
+          loaders: |
+            neoforge
+          game-versions: |
+            ${{ env.MC_VERSION }}
+          version: ${{ env.VERSION }}
+          changelog: ${{ env.CHANGELOG }}
+          files: neoforge/build/libs/*[!-dev][!-sources].jar:neoforge
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
@@ -116,18 +144,18 @@ jobs:
 
       - name: Publish Fabric
         if: ${{ env.IS_TEST != 'true' && env.PUBLISH_FABRIC == 'true' }}
-        uses: Kira-NT/mc-publish@v3
+        uses: Kira-NT/mc-publish@v3.3
         with:
-          modrinth-id: GRznXwf3
+          modrinth-id: ${{ secrets.MODRINTH_ID }}
           modrinth-featured: true
-          curseforge-id: 897858
+          curseforge-id: ${{ secrets.CURSEFORGE_ID }}
           loaders: |
             fabric
           game-versions: |
-              1.20.1
+            ${{ env.MC_VERSION }}
           version: ${{ env.VERSION }}
           changelog: ${{ env.CHANGELOG }}
-          files: fabric/build/libs/*.jar:fabric
+          files: fabric/build/libs/*[!-dev][!-sources].jar:fabric
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}

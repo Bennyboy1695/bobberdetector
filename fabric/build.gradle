@@ -44,7 +44,7 @@ processResources {
 
 shadowJar {
     configurations = [project.configurations.shadowBundle]
-    archiveClassifier = 'dev-shadow'
+    archiveClassifier = 'dev'
 }
 
 remapJar {
