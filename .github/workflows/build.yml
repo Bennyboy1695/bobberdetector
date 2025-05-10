@@ -37,32 +37,38 @@ jobs:
             echo "IS_TEST=false" >> $GITHUB_ENV
           fi
 
-      - name: Read Minecraft version from gradle.properties and determine loaders
+      - name: Read Minecraft version from gradle.properties
         run: |
           MC_VERSION=$(grep "^minecraft_version=" gradle.properties | cut -d'=' -f2)
           echo "MC_VERSION=$MC_VERSION" >> $GITHUB_ENV
+      
+      - name: Export ENABLED_LOADERS to environment
+        run: echo "ENABLED_LOADERS=${{ secrets.ENABLED_LOADERS }}" >> $GITHUB_ENV
 
-          if [[ "${{ secrets.ENABLED_LOADERS }}" == *"fabric"* ]]; then
-            echo "PUBLISH_FABRIC=true" >> $GITHUB_ENV
-          else
-            echo "PUBLISH_FABRIC=false" >> $GITHUB_ENV
-          fi
+      - name: Determine Forge/NeoForge build
+        id: detect-loader
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const semver = require('semver');
 
-          if [[ "$MC_VERSION" == 1.21* || "$MC_VERSION" > 1.20 ]]; then
-            if [[ "${{ secrets.ENABLED_LOADERS }}" == *"neoforge"* ]]; then
-              echo "PUBLISH_NEOFORGE=true" >> $GITHUB_ENV
-            else
-              echo "PUBLISH_NEOFORGE=false" >> $GITHUB_ENV
-            fi
-            echo "PUBLISH_FORGE=false" >> $GITHUB_ENV
-          else
-            if [[ "${{ secrets.ENABLED_LOADERS }}" == *"forge"* ]]; then
-              echo "PUBLISH_FORGE=true" >> $GITHUB_ENV
-            else
-              echo "PUBLISH_FORGE=false" >> $GITHUB_ENV
-            fi
-            echo "PUBLISH_NEOFORGE=false" >> $GITHUB_ENV
-          fi
+            const mcVersion = process.env.MC_VERSION || '1.20.1';
+            const loaders = process.env.ENABLED_LOADERS || '';
+            const forgeEnabled = loaders.includes('forge');
+
+            const isNeoForge = semver.gte(mcVersion, '1.21.0') && forgeEnabled;
+            const isForge = semver.lt(mcVersion, '1.21.0') && forgeEnabled;
+
+            core.setOutput('PUBLISH_NEOFORGE', isNeoForge);
+            core.setOutput('PUBLISH_FORGE', isForge);
+        env:
+          MC_VERSION: ${{ env.MC_VERSION }}
+          ENABLED_LOADERS: ${{ secrets.ENABLED_LOADERS }}
+
+      - name: Export loader build flags
+        run: |
+          echo "PUBLISH_NEOFORGE=${{ steps.detect-loader.outputs.PUBLISH_NEOFORGE }}" >> $GITHUB_ENV
+          echo "PUBLISH_FORGE=${{ steps.detect-loader.outputs.PUBLISH_FORGE }}" >> $GITHUB_ENV
 
       - name: Build Forge
         if: ${{ env.PUBLISH_FORGE == 'true' }}
@@ -73,7 +79,7 @@ jobs:
         run: ./gradlew :neoforge:build -Pversion_property=${{ env.VERSION }}
 
       - name: Build Fabric
-        if: ${{ env.PUBLISH_FABRIC == 'true' }}
+        if: ${{ env.ENABLED_LOADERS && contains(env.ENABLED_LOADERS, 'fabric') }}
         run: ./gradlew :fabric:build -Pversion_property=${{ env.VERSION }}
 
       - name: Generate changelog
@@ -81,9 +87,6 @@ jobs:
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
           git log --pretty=format:"- %s" $(git describe --tags --abbrev=0)..HEAD >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
-
-      - name: Print Changelog
-        run: echo "${{ env.CHANGELOG }}"
 
       - name: Upload Forge JARs (Test)
         if: ${{ env.IS_TEST == 'true' && env.PUBLISH_FORGE == 'true' }}
@@ -100,7 +103,7 @@ jobs:
           path: neoforge/build/libs/*.jar
 
       - name: Upload Fabric JARs (Test)
-        if: ${{ env.IS_TEST == 'true' && env.PUBLISH_FABRIC == 'true' }}
+        if: ${{ env.IS_TEST == 'true' && env.ENABLED_LOADERS && contains(env.ENABLED_LOADERS, 'fabric') }}
         uses: actions/upload-artifact@v4
         with:
           name: fabric-${{ env.VERSION }}
@@ -115,7 +118,6 @@ jobs:
           curseforge-id: ${{ secrets.CURSEFORGE_ID }}
           loaders: |
             forge
-            neoforge
           game-versions: |
             ${{ env.MC_VERSION }}
           version: ${{ env.VERSION }}
@@ -146,7 +148,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish Fabric
-        if: ${{ env.IS_TEST != 'true' && env.PUBLISH_FABRIC == 'true' }}
+        if: ${{ env.IS_TEST != 'true' && env.ENABLED_LOADERS && contains(env.ENABLED_LOADERS, 'fabric') }}
         uses: Kira-NT/mc-publish@v3.3
         with:
           modrinth-id: ${{ secrets.MODRINTH_ID }}
