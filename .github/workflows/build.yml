@@ -41,7 +41,7 @@ jobs:
         run: |
           MC_VERSION=$(grep "^minecraft_version=" gradle.properties | cut -d'=' -f2)
           echo "MC_VERSION=$MC_VERSION" >> $GITHUB_ENV
-      
+
       - name: Export ENABLED_LOADERS to environment
         run: echo "ENABLED_LOADERS=${{ secrets.ENABLED_LOADERS }}" >> $GITHUB_ENV
 
@@ -50,14 +50,20 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const semver = require('semver');
+            function compareVersions(v1, v2) {
+              const [a1, b1, c1] = v1.split('.').map(Number);
+              const [a2, b2, c2] = v2.split('.').map(Number);
+              if (a1 !== a2) return a1 > a2;
+              if (b1 !== b2) return b1 > b2;
+              return (c1 || 0) >= (c2 || 0);
+            }
 
             const mcVersion = process.env.MC_VERSION || '1.20.1';
             const loaders = process.env.ENABLED_LOADERS || '';
             const forgeEnabled = loaders.includes('forge');
 
-            const isNeoForge = semver.gte(mcVersion, '1.21.0') && forgeEnabled;
-            const isForge = semver.lt(mcVersion, '1.21.0') && forgeEnabled;
+            const isNeoForge = compareVersions(mcVersion, '1.21.0') && forgeEnabled;
+            const isForge = !compareVersions(mcVersion, '1.21.0') && forgeEnabled;
 
             core.setOutput('PUBLISH_NEOFORGE', isNeoForge);
             core.setOutput('PUBLISH_FORGE', isForge);
