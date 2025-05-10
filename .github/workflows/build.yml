@@ -69,6 +69,31 @@ jobs:
           git log --pretty=format:"- %s" $(git describe --tags --abbrev=0)..HEAD >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
+      # Print built JAR files if test build
+      - name: List JARs
+        if: ${{ env.IS_TEST == 'true' }}
+        run: |
+          echo "Forge JARs:"
+          ls -lh forge/build/libs || true
+          echo "Fabric JARs:"
+          ls -lh fabric/build/libs || true
+
+      # Upload Forge JAR as artifact for test build
+      - name: Upload Forge JAR (Test)
+        if: ${{ env.IS_TEST == 'true' && env.PUBLISH_FORGE == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: forge-${{ env.VERSION }}
+          path: forge/build/libs/*.jar
+
+      # Upload Fabric JAR as artifact for test build
+      - name: Upload Fabric JAR (Test)
+        if: ${{ env.IS_TEST == 'true' && env.PUBLISH_FABRIC == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-${{ env.VERSION }}
+          path: fabric/build/libs/*.jar
+
       - name: Publish Forge
         uses: Kira-NT/mc-publish@v3.3
         if: ${{ env.IS_TEST != 'true' && env.PUBLISH_FORGE == 'true' }}
