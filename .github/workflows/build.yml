@@ -82,6 +82,9 @@ jobs:
           git log --pretty=format:"- %s" $(git describe --tags --abbrev=0)..HEAD >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
+      - name: Print Changelog
+        run: echo "${{ env.CHANGELOG }}"
+
       - name: Upload Forge JARs (Test)
         if: ${{ env.IS_TEST == 'true' && env.PUBLISH_FORGE == 'true' }}
         uses: actions/upload-artifact@v4
