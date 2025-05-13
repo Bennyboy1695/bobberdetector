@@ -12,6 +12,7 @@ import net.glad0s.bobberdetector.content.BobberDetectorBlock;
 import net.glad0s.bobberdetector.content.entity.BobberDetectorBlockEntity;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 
 public class BDBlocks {
 
@@ -19,6 +20,7 @@ public class BDBlocks {
 
     public static final BlockEntry<BobberDetectorBlock> BASIC_BOBBER_BLOCK =
             REGISTRATE.block("bobber_detector", BobberDetectorBlock::new)
+                    .initialProperties(() -> Blocks.DISPENSER)
                     .properties(p -> p.lightLevel(state -> state.getValue(BobberDetectorBlock.LIT) ? 5 : 0))
                     .blockEntity(BobberDetectorBlockEntity::new)
                     .build()

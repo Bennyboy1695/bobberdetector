@@ -1,13 +1,13 @@
 modLoader = "javafml"
 loaderVersion = "[47,)"
-issueTrackerURL = "https://github.com/laserman120/Bobber-Detector-Minecraft/issues"
+issueTrackerURL = "https://github.com/Bennyboy1695/BobberDetector/issues"
 license = "MIT"
 
 [[mods]]
 modId = "bobberdetector"
-version = "1.0.0"
+version = "${version}"
 displayName = "Bobber Detector"
-updateJSONURL = "https://raw.githubusercontent.com/laserman120/Bobber-Detector-Minecraft/refs/heads/master/update.json"
+updateJSONURL = "https://raw.githubusercontent.com/Bennyboy1695/BobberDetector/refs/heads/multiloader/update.json"
 authors = "GLaD0S, Bennyboy1695"
 description = '''
 Automatic fishing with create.
