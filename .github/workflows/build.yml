@@ -128,7 +128,8 @@ jobs:
             ${{ env.MC_VERSION }}
           version: ${{ env.VERSION }}
           changelog: ${{ env.CHANGELOG }}
-          files: forge/build/libs/*[!-dev][!-sources].jar:forge
+          files: |
+            forge/build/libs/!(*-@(dev|sources|javadoc)).jar
           modrinth-token: ${{ env.MODRINTH_TOKEN }}
           curseforge-token: ${{ env.CURSEFORGE_TOKEN }}
           dependencies: |
@@ -151,7 +152,8 @@ jobs:
             ${{ env.MC_VERSION }}
           version: ${{ env.VERSION }}
           changelog: ${{ env.CHANGELOG }}
-          files: neoforge/build/libs/*[!-dev][!-sources].jar:neoforge
+          files: |
+            neoforge/build/libs/!(*-@(dev|sources|javadoc)).jar
           modrinth-token: ${{ env.MODRINTH_TOKEN }}
           curseforge-token: ${{ env.CURSEFORGE_TOKEN }}
           dependencies: |
@@ -174,7 +176,8 @@ jobs:
             ${{ env.MC_VERSION }}
           version: ${{ env.VERSION }}
           changelog: ${{ env.CHANGELOG }}
-          files: fabric/build/libs/*[!-dev][!-sources].jar:fabric
+          files: |
+            fabric/build/libs/!(*-@(dev|sources|javadoc)).jar
           modrinth-token: ${{ env.MODRINTH_TOKEN }}
           curseforge-token: ${{ env.CURSEFORGE_TOKEN }}
           dependencies: |
