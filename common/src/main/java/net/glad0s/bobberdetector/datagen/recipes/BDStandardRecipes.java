@@ -8,6 +8,7 @@ import net.glad0s.bobberdetector.datagen.recipes.gen.BobberDetectorRecipeProvide
 import net.glad0s.bobberdetector.datagen.recipes.gen.GeneratedRecipeBuilder;
 import net.glad0s.bobberdetector.multiloader.Platform;
 import net.glad0s.bobberdetector.register.BDBlocks;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -15,6 +16,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 public class BDStandardRecipes extends BobberDetectorRecipeProvider {
@@ -40,7 +42,7 @@ public class BDStandardRecipes extends BobberDetectorRecipeProvider {
         throw new AssertionError();
     }
 
-    static GeneratedRecipeBuilder create(ItemProviderEntry<? extends ItemLike> result) {
+    static GeneratedRecipeBuilder create(ItemProviderEntry<? extends ItemLike, ?> result) {
         return create(result::get);
     }
 
@@ -48,8 +50,8 @@ public class BDStandardRecipes extends BobberDetectorRecipeProvider {
         return create(() -> result);
     }
 
-    public BDStandardRecipes(PackOutput output) {
-        super(output);
+    public BDStandardRecipes(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
+        super(output, registries);
     }
 
     public enum TaggedIngredients {
@@ -64,7 +66,7 @@ public class BDStandardRecipes extends BobberDetectorRecipeProvider {
         }
 
         public TagKey<Item> getTag() {
-            return Platform.getCurrent().equals(Platform.FORGE) ? this.forge : this.fabric;
+            return Platform.getCurrent().equals(Platform.NEOFORGE) ? this.forge : this.fabric;
         }
     }
 }

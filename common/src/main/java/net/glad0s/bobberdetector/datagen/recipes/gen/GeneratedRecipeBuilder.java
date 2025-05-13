@@ -1,6 +1,6 @@
 package net.glad0s.bobberdetector.datagen.recipes.gen;
 
-import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.data.recipes.ShapelessRecipeBuilder;
 import net.minecraft.data.recipes.SimpleCookingRecipeBuilder;
@@ -26,7 +26,7 @@ public interface GeneratedRecipeBuilder {
 
     GeneratedRecipe viaShapeless(UnaryOperator<ShapelessRecipeBuilder> builder);
 
-    GeneratedRecipe handleConditions(Consumer<Consumer<FinishedRecipe>> recipe);
+    GeneratedRecipe handleConditions(Consumer<RecipeOutput> recipe);
 
     GeneratedCookingRecipeBuilder viaCooking(Supplier<? extends ItemLike> item);
 
@@ -67,6 +67,6 @@ public interface GeneratedRecipeBuilder {
     @FunctionalInterface
     public interface GeneratedRecipe {
 
-        void register(Consumer<FinishedRecipe> consumer);
+        void register(RecipeOutput consumer);
     }
 }

@@ -80,7 +80,7 @@ public class BobberPonder {
         ItemStack fishing_rod = new ItemStack(Items.FISHING_ROD);
 
         scene.world().modifyBlockEntityNBT(deployerSelection, deployerType,
-                nbt -> nbt.put("HeldItem", fishing_rod.getOrCreateTag()));
+                nbt -> nbt.put("HeldItem", fishing_rod.save(sceneBuilder.world().getHolderLookupProvider())));
 
         scene.overlay().showText(80)
                 .text("Deployers can be given fishing rods to fish for you")

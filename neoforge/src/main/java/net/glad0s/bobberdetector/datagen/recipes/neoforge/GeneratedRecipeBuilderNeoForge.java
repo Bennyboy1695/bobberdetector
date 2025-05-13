@@ -1,7 +1,6 @@
-package net.glad0s.bobberdetector.datagen.recipes.forge;
+package net.glad0s.bobberdetector.datagen.recipes.neoforge;
 
-import com.tterrag.registrate.util.entry.BlockEntry;
-import net.createmod.catnip.platform.CatnipServices;
+import net.createmod.catnip.registry.RegisteredObjectsHelper;
 import net.glad0s.bobberdetector.BobberDetector;
 import net.glad0s.bobberdetector.datagen.recipes.gen.BobberDetectorRecipeProvider;
 import net.glad0s.bobberdetector.datagen.recipes.gen.GeneratedRecipeBuilder;
@@ -11,12 +10,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.AbstractCookingRecipe;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.ItemLike;
-import net.minecraftforge.common.crafting.ConditionalRecipe;
-import net.minecraftforge.common.crafting.conditions.ICondition;
+import net.neoforged.neoforge.common.conditions.ICondition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +22,7 @@ import java.util.function.UnaryOperator;
 
 import static com.tterrag.registrate.providers.RegistrateRecipeProvider.inventoryTrigger;
 
-public class GeneratedRecipeBuilderForge implements GeneratedRecipeBuilder {
+public class GeneratedRecipeBuilderNeoForge implements GeneratedRecipeBuilder {
 
     private final List<ICondition> recipeConditions = new ArrayList<>();
     private String path = "";
@@ -37,18 +33,18 @@ public class GeneratedRecipeBuilderForge implements GeneratedRecipeBuilder {
     private Supplier<ItemPredicate> unlockedBy;
     private int amount;
 
-    private GeneratedRecipeBuilderForge(String path) {
+    private GeneratedRecipeBuilderNeoForge(String path) {
         this.path = path;
         suffix = "";
         this.amount = 1;
     }
 
-    public GeneratedRecipeBuilderForge(String path, Supplier<? extends ItemLike> result) {
+    public GeneratedRecipeBuilderNeoForge(String path, Supplier<? extends ItemLike> result) {
         this(path);
         this.result = result;
     }
 
-    public GeneratedRecipeBuilderForge(String path, ResourceLocation result) {
+    public GeneratedRecipeBuilderNeoForge(String path, ResourceLocation result) {
         this(path);
         compatDatagenOutput = result;
     }
@@ -105,7 +101,7 @@ public class GeneratedRecipeBuilderForge implements GeneratedRecipeBuilder {
         String path = loc.getPath();
         while (path.contains("//"))
             path = path.replaceAll("//", "/");
-        return new ResourceLocation(loc.getNamespace(), path);
+        return ResourceLocation.fromNamespaceAndPath(loc.getNamespace(), path);
     }
 
     private ResourceLocation createSimpleLocation(String recipeType) {
@@ -119,21 +115,17 @@ public class GeneratedRecipeBuilderForge implements GeneratedRecipeBuilder {
     }
 
     private ResourceLocation getRegistryName() {
-        return compatDatagenOutput == null ? CatnipServices.REGISTRIES.getKeyOrThrow(result.get()
+        return compatDatagenOutput == null ? RegisteredObjectsHelper.getKeyOrThrow(result.get()
                 .asItem()) : compatDatagenOutput;
     }
 
     @Override
-    public GeneratedRecipe handleConditions(Consumer<Consumer<FinishedRecipe>> recipe) {
-        return BobberDetectorRecipeProvider.register(consumer -> {
+    public GeneratedRecipe handleConditions(Consumer<RecipeOutput> recipe) {
+        return BobberDetectorRecipeProvider.register(output -> {
             if (!recipeConditions.isEmpty()) {
-                ConditionalRecipe.Builder b = ConditionalRecipe.builder();
-                recipeConditions.forEach(b::addCondition);
-                b.addRecipe(recipe);
-                b.generateAdvancement();
-                b.build(consumer, createLocation("crafting"));
+                recipe.accept(output.withConditions(recipeConditions.toArray(new ICondition[0])));
             } else {
-                recipe.accept(consumer);
+                recipe.accept(output);
             }
         });
     }
@@ -150,7 +142,7 @@ public class GeneratedRecipeBuilderForge implements GeneratedRecipeBuilder {
 
     @Override
     public GeneratedCookingRecipeBuilder viaCookingIngredient(Supplier<Ingredient> ingredient) {
-        return new GeneratedCookingRecipeBuilderForge(ingredient);
+        return new GeneratedCookingRecipeBuilderNeoForge(ingredient);
     }
 
     @Override
@@ -165,20 +157,16 @@ public class GeneratedRecipeBuilderForge implements GeneratedRecipeBuilder {
 
     @Override
     public GeneratedStoneCuttingRecipeBuilder viaStonecuttingIngredient(Supplier<Ingredient> ingredient) {
-        return new GeneratedStoneCuttingRecipeBuilderForge(ingredient);
+        return new GeneratedStoneCuttingRecipeBuilderNeoForge(ingredient);
     }
 
-    public class GeneratedCookingRecipeBuilderForge implements GeneratedCookingRecipeBuilder {
+    public class GeneratedCookingRecipeBuilderNeoForge implements GeneratedCookingRecipeBuilder {
 
         private final Supplier<Ingredient> ingredient;
         private float exp;
         private int cookingTime;
 
-        private final RecipeSerializer<? extends AbstractCookingRecipe> FURNACE = RecipeSerializer.SMELTING_RECIPE,
-                SMOKER = RecipeSerializer.SMOKING_RECIPE, BLAST = RecipeSerializer.BLASTING_RECIPE,
-                CAMPFIRE = RecipeSerializer.CAMPFIRE_COOKING_RECIPE;
-
-        GeneratedCookingRecipeBuilderForge(Supplier<Ingredient> ingredient) {
+        GeneratedCookingRecipeBuilderNeoForge(Supplier<Ingredient> ingredient) {
             this.ingredient = ingredient;
             cookingTime = 200;
             exp = 0;
@@ -203,7 +191,7 @@ public class GeneratedRecipeBuilderForge implements GeneratedRecipeBuilder {
 
         @Override
         public GeneratedRecipe inFurnace(UnaryOperator<SimpleCookingRecipeBuilder> builder) {
-            return create(FURNACE, builder, 1);
+            return create(RecipeSerializer.SMELTING_RECIPE, builder, SmeltingRecipe::new, 1);
         }
 
         @Override
@@ -213,9 +201,9 @@ public class GeneratedRecipeBuilderForge implements GeneratedRecipeBuilder {
 
         @Override
         public GeneratedRecipe inSmoker(UnaryOperator<SimpleCookingRecipeBuilder> builder) {
-            create(FURNACE, builder, 1);
-            create(CAMPFIRE, builder, 3);
-            return create(SMOKER, builder, .5f);
+            create(RecipeSerializer.SMELTING_RECIPE, builder, SmeltingRecipe::new, 1);
+            create(RecipeSerializer.CAMPFIRE_COOKING_RECIPE, builder, CampfireCookingRecipe::new, 3);
+            return create(RecipeSerializer.SMOKING_RECIPE, builder, SmokingRecipe::new, .5f);
         }
 
         @Override
@@ -225,31 +213,31 @@ public class GeneratedRecipeBuilderForge implements GeneratedRecipeBuilder {
 
         @Override
         public GeneratedRecipe inBlastFurnace(UnaryOperator<SimpleCookingRecipeBuilder> builder) {
-            create(FURNACE, builder, 1);
-            return create(BLAST, builder, .5f);
+            create(RecipeSerializer.SMELTING_RECIPE, builder, SmeltingRecipe::new, 1);
+            return create(RecipeSerializer.BLASTING_RECIPE, builder, BlastingRecipe::new, .5f);
         }
 
-        private GeneratedRecipe create(RecipeSerializer<? extends AbstractCookingRecipe> serializer,
-                                       UnaryOperator<SimpleCookingRecipeBuilder> builder, float cookingTimeModifier) {
+        private <T extends AbstractCookingRecipe> GeneratedRecipe create(RecipeSerializer<T> serializer,
+                                                                         UnaryOperator<SimpleCookingRecipeBuilder> builder, AbstractCookingRecipe.Factory<T> factory, float cookingTimeModifier) {
             return BobberDetectorRecipeProvider.register(consumer -> {
                 boolean isOtherMod = compatDatagenOutput != null;
 
-                SimpleCookingRecipeBuilder b = builder.apply(
-                        SimpleCookingRecipeBuilder.generic(ingredient.get(), RecipeCategory.MISC, isOtherMod ? Items.DIRT : result.get(),
-                                exp, (int) (cookingTime * cookingTimeModifier), serializer));
+                SimpleCookingRecipeBuilder b = builder.apply(SimpleCookingRecipeBuilder.generic(ingredient.get(),
+                        RecipeCategory.MISC, isOtherMod ? Items.DIRT : result.get(), exp,
+                        (int) (cookingTime * cookingTimeModifier), serializer, factory));
                 if (unlockedBy != null)
                     b.unlockedBy("has_item", inventoryTrigger(unlockedBy.get()));
-                b.save(consumer::accept, createSimpleLocation(CatnipServices.REGISTRIES.getKeyOrThrow(serializer)
+                b.save(consumer, createSimpleLocation(RegisteredObjectsHelper.getKeyOrThrow(serializer)
                         .getPath()));
             });
         }
     }
 
-    public class GeneratedStoneCuttingRecipeBuilderForge implements GeneratedStoneCuttingRecipeBuilder {
+    public class GeneratedStoneCuttingRecipeBuilderNeoForge implements GeneratedStoneCuttingRecipeBuilder {
 
         private final Supplier<Ingredient> ingredient;
 
-        GeneratedStoneCuttingRecipeBuilderForge(Supplier<Ingredient> ingredient) {
+        GeneratedStoneCuttingRecipeBuilderNeoForge(Supplier<Ingredient> ingredient) {
             this.ingredient = ingredient;
         }
 

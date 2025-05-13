@@ -10,11 +10,14 @@ import net.glad0s.bobberdetector.datagen.recipes.BDStandardRecipes;
 import net.glad0s.bobberdetector.register.BDBlockEntities;
 import net.glad0s.bobberdetector.register.BDBlocks;
 import net.glad0s.bobberdetector.register.BDCreativeTabs;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTabs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.CompletableFuture;
 
 public final class BobberDetector {
     public static final String MOD_ID = "bobberdetector";
@@ -39,12 +42,12 @@ public final class BobberDetector {
         finalizeRegistrate();
     }
 
-    public static void gatherData(DataGenerator.PackGenerator gen) {
-        gen.addProvider(BDStandardRecipes::new);
+    public static void gatherData(DataGenerator.PackGenerator gen, CompletableFuture<HolderLookup.Provider> lookupProvider) {
+        gen.addProvider(output -> new BDStandardRecipes(output, lookupProvider));
     }
 
     public static ResourceLocation asResource(String path) {
-        return new ResourceLocation(MOD_ID, path);
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
     }
 
     public static CreateRegistrate registrate() {

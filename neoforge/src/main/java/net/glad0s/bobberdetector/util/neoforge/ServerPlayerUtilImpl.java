@@ -1,4 +1,4 @@
-package net.glad0s.bobberdetector.util.forge;
+package net.glad0s.bobberdetector.util.neoforge;
 
 import com.simibubi.create.content.kinetics.deployer.DeployerFakePlayer;
 import net.minecraft.world.entity.Entity;

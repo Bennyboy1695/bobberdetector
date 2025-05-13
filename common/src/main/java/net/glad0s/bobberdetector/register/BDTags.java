@@ -21,7 +21,7 @@ public class BDTags {
     }
 
     public static <T> TagKey<T> commonTag(Registry<T> registry, String path) {
-        return optionalTag(registry, new ResourceLocation((Platform.getCurrent().equals(Platform.FORGE) ? "forge" : "c"), path));
+        return optionalTag(registry, ResourceLocation.fromNamespaceAndPath("c", path));
     }
 
     public static TagKey<EntityType<?>> commonEntityTag(String path) {
@@ -43,7 +43,7 @@ public class BDTags {
     public enum NameSpace {
 
         MOD(BobberDetector.MOD_ID, false, true),
-        COMMON(Platform.getCurrent() == Platform.FORGE ? "forge" : "c", false, true);
+        COMMON("c", false, true);
 
         public final String id;
         public final boolean optionalDefault;
@@ -85,7 +85,7 @@ public class BDTags {
         }
 
         Entities(NameSpace namespace, String path, boolean optional, boolean alwaysDatagen) {
-            ResourceLocation id = new ResourceLocation(namespace.id, path == null ? BDLang.asId(name()) : path);
+            ResourceLocation id = ResourceLocation.fromNamespaceAndPath(namespace.id, path == null ? BDLang.asId(name()) : path);
             if (optional) {
                 tag = optionalTag(BuiltInRegistries.ENTITY_TYPE, id);
             } else {

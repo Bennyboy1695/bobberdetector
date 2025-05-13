@@ -18,6 +18,7 @@ allprojects {
     archivesBaseName = rootProject.archivesBaseName
 
     repositories {
+        maven { url "https://maven.neoforged.net/releases/" }
         maven {
             name = 'ParchmentMC'
             url = 'https://maven.parchmentmc.org'
@@ -95,11 +96,13 @@ allprojects {
         }
 
         def replaceProperties = [
-                version              : version.replace("forge.", "").replace("fabric.", ""),
+                version              : version.replace("neoforge.", "").replace("fabric.", ""),
                 minecraft_version    : minecraft_version,
+                minecraft_version_range      : minecraft_version_range,
+                neoforge_version_range       : neoforge_version_range,
                 fabric_api_version   : fabric_api_version,
                 fabric_loader_version: fabric_loader_version,
-                create_forge_range   : create_forge_range,
+                create_forge_range   : create_neoforge_range,
                 create_fabric_range  : create_fabric_range,
                 mod_license          : mod_license,
                 mod_authors          : mod_authors,
@@ -109,7 +112,7 @@ allprojects {
 
         inputs.properties replaceProperties
 
-        filesMatching(["fabric.mod.json", "META-INF/mods.toml"]) {
+        filesMatching(["fabric.mod.json", "META-INF/neoforge.mods.toml"]) {
             expand replaceProperties + [project: project]
         }
     }
@@ -139,12 +142,12 @@ subprojects {
 
     java {
         withSourcesJar()
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     tasks.withType(JavaCompile).configureEach {
-        it.options.release = 17
+        it.options.release = 21
     }
 
     tasks.named('remapJar').configure {

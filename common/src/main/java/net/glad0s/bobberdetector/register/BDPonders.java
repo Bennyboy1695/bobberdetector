@@ -2,7 +2,7 @@ package net.glad0s.bobberdetector.register;
 
 import com.simibubi.create.infrastructure.ponder.AllCreatePonderTags;
 import com.tterrag.registrate.util.entry.ItemProviderEntry;
-import com.tterrag.registrate.util.entry.RegistryEntry;
+import net.createmod.catnip.registry.RegisteredObjectsHelper;
 import net.createmod.ponder.api.registration.PonderPlugin;
 import net.createmod.ponder.api.registration.PonderSceneRegistrationHelper;
 import net.createmod.ponder.api.registration.PonderTagRegistrationHelper;
@@ -19,7 +19,7 @@ public class BDPonders implements PonderPlugin {
 
     @Override
     public void registerTags(PonderTagRegistrationHelper<ResourceLocation> helper) {
-        PonderTagRegistrationHelper<RegistryEntry<?>> HELPER = helper.withKeyFunction(RegistryEntry::getId);
+        PonderTagRegistrationHelper<ItemProviderEntry<?,?>> HELPER = helper.withKeyFunction(RegisteredObjectsHelper::getKeyOrThrow);
 
         HELPER.addToTag(AllCreatePonderTags.REDSTONE)
                 .add(BDBlocks.BASIC_BOBBER_BLOCK);
@@ -27,6 +27,8 @@ public class BDPonders implements PonderPlugin {
 
     @Override
     public void registerScenes(PonderSceneRegistrationHelper<ResourceLocation> helper) {
-        helper.addStoryBoard(BDBlocks.BASIC_BOBBER_BLOCK.getId(), "bobber_detector_ponder", BobberPonder::bobberBasic, AllCreatePonderTags.REDSTONE);
+        PonderSceneRegistrationHelper<ItemProviderEntry<?, ?>> HELPER = helper.withKeyFunction(RegisteredObjectsHelper::getKeyOrThrow);
+        HELPER.forComponents(BDBlocks.BASIC_BOBBER_BLOCK)
+                        .addStoryBoard("bobber_detector_ponder", BobberPonder::bobberBasic, AllCreatePonderTags.REDSTONE);
     }
 }
