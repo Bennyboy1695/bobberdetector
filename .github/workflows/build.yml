@@ -91,12 +91,6 @@ jobs:
         if: ${{ env.ENABLED_LOADERS && contains(env.ENABLED_LOADERS, 'fabric') }}
         run: ./gradlew :fabric:build -Pversion_property=${{ env.VERSION }}
 
-      - name: Generate changelog
-        run: |
-          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0)..HEAD >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
       - name: Upload Forge JARs (Test)
         if: ${{ env.IS_TEST == 'true' && env.PUBLISH_FORGE == 'true' }}
         uses: actions/upload-artifact@v4
@@ -131,7 +125,7 @@ jobs:
           game-versions: |
             ${{ env.MC_VERSION }}
           version: ${{ env.VERSION }}
-          changelog: ${{ env.CHANGELOG }}
+          github-generate-changelog: true
           files: |
             forge/build/libs/!(*-@(dev|sources|javadoc)).jar
           modrinth-token: ${{ env.MODRINTH_TOKEN }}
@@ -156,7 +150,7 @@ jobs:
           game-versions: |
             ${{ env.MC_VERSION }}
           version: ${{ env.VERSION }}
-          changelog: ${{ env.CHANGELOG }}
+          github-generate-changelog: true
           files: |
             neoforge/build/libs/!(*-@(dev|sources|javadoc)).jar
           modrinth-token: ${{ env.MODRINTH_TOKEN }}
@@ -181,7 +175,7 @@ jobs:
           game-versions: |
             ${{ env.MC_VERSION }}
           version: ${{ env.VERSION }}
-          changelog: ${{ env.CHANGELOG }}
+          github-generate-changelog: true
           files: |
             fabric/build/libs/!(*-@(dev|sources|javadoc)).jar
           modrinth-token: ${{ env.MODRINTH_TOKEN }}
