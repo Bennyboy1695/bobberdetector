@@ -4,7 +4,6 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.outliner.AABBOutline;
 import net.glad0s.bobberdetector.content.BobberDetectorBlock;
-import net.glad0s.bobberdetector.mixin_interface.FishingHookAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
@@ -13,7 +12,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+
 import java.util.List;
+
 import static net.glad0s.bobberdetector.register.BDTags.BOBBER_TAG;
 
 public class BobberDetectorBlockEntity extends SmartBlockEntity {
@@ -85,7 +86,7 @@ public class BobberDetectorBlockEntity extends SmartBlockEntity {
                 boolean isInTag = target.getType().is(BOBBER_TAG);
                 if (isInTag) {
                     if (target instanceof FishingHook fishingHook) {
-                        isBiting = ((FishingHookAccessor) fishingHook).bobberdetector$isBiting();
+                        isBiting = fishingHook.biting;
                     }
                     //check if there is a fluid 0.2 blocks below the bobber
                     double belowBobber = target.getY() - 0.2;

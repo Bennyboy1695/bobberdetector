@@ -2,37 +2,22 @@ package net.glad0s.bobberdetector.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.glad0s.bobberdetector.mixin_interface.FishingHookAccessor;
 import net.glad0s.bobberdetector.multiloader.Platform;
 import net.glad0s.bobberdetector.util.ClientPlayerUtil;
 import net.glad0s.bobberdetector.util.ServerPlayerUtil;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
-import javax.annotation.Nullable;
-
 @Mixin(FishingHook.class)
-public abstract class MixinFishingHook extends Projectile implements FishingHookAccessor {
-
-    @Shadow
-    private boolean biting;
+public abstract class MixinFishingHook extends Projectile {
 
     public MixinFishingHook(EntityType<? extends Projectile> entityType, Level level) {
         super(entityType, level);
-    }
-
-    @Override
-    public boolean bobberdetector$isBiting() {
-        return biting;
     }
 
     @WrapOperation(method = "recreateFromPacket", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/FishingHook;getPlayerOwner()Lnet/minecraft/world/entity/player/Player;"))

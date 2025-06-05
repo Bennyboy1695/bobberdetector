@@ -2,9 +2,11 @@ package net.glad0s.bobberdetector.datagen.neoforge;
 
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.tterrag.registrate.providers.ProviderType;
+import com.tterrag.registrate.providers.RegistrateDataProvider;
 import net.glad0s.bobberdetector.BobberDetector;
 import net.glad0s.bobberdetector.datagen.BDDatagen;
 import net.glad0s.bobberdetector.datagen.BDTagGen;
+import net.glad0s.bobberdetector.datagen.recipes.BDStandardRecipes;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
@@ -38,8 +40,8 @@ public class BDDatagenImpl extends BDDatagen {
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
         ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
 
-        if (event.includeServer()) {
-            BobberDetector.gatherData(generator.getVanillaPack(true), lookupProvider);
-        }
+        generator.addProvider(event.includeServer(), new BDStandardRecipes(output, lookupProvider));
+
+        event.getGenerator().addProvider(true, BobberDetector.registrate().setDataProvider(new RegistrateDataProvider(BobberDetector.registrate(), BobberDetector.MOD_ID, event)));
     }
 }

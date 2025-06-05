@@ -21,7 +21,7 @@
     "ARA"
   ],
   "result": {
-    "item": "bobberdetector:bobber_detector"
-  },
-  "show_notification": true
+    "count": 1,
+    "id": "bobberdetector:bobber_detector"
+  }
 }

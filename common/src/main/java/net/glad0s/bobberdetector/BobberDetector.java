@@ -12,7 +12,9 @@ import net.glad0s.bobberdetector.register.BDBlocks;
 import net.glad0s.bobberdetector.register.BDCreativeTabs;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,12 +29,10 @@ public final class BobberDetector {
     public static final String NAME = "BobberDetector";
 
     public static final Logger LOGGER = LoggerFactory.getLogger("BobberDetector");
-    private static CreateRegistrate REGISTRATE = CreateRegistrate.create(MOD_ID);
-
-    static {
-        REGISTRATE.setTooltipModifierFactory(item -> new ItemDescription.Modifier(item, FontHelper.Palette.STANDARD_CREATE)
-                .andThen(TooltipModifier.mapNull(KineticStats.create(item))));
-    }
+    private static CreateRegistrate REGISTRATE = CreateRegistrate.create(MOD_ID)
+            .defaultCreativeTab((ResourceKey<CreativeModeTab>) null)
+            .setTooltipModifierFactory(item -> new ItemDescription.Modifier(item, FontHelper.Palette.STANDARD_CREATE)
+                    .andThen(TooltipModifier.mapNull(KineticStats.create(item))));
 
     public static void init() {
         REGISTRATE.modifyCreativeModeTab(CreativeModeTabs.REDSTONE_BLOCKS, BDCreativeTabs::modifyTab);

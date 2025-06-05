@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 public class BobberDetectorClient {
 
     public static void init() {
-        PonderIndex.addPlugin(new BDPonders());
+
     }
 
     public static void onBlockHighlight(BlockEntity target) {
@@ -20,5 +20,9 @@ public class BobberDetectorClient {
                     .withFaceTexture(AllSpecialTextures.SELECTION)
                     .lineWidth(0.5f /16f);
         }
+    }
+
+    public static void clientInit() {
+        PonderIndex.addPlugin(new BDPonders());
     }
 }
